@@ -98,6 +98,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const GRAPH_API_TOKEN = process.env.GRAPH_API_TOKEN;
+const PORT = process.env.PORT;
 
 // ---------------------------------------------------------
 // VERIFY WEBHOOK (GET)
