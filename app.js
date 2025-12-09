@@ -175,66 +175,49 @@
 // // ---------------------------------------------------------
 // app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
+
+
+
+
+
+
+
+
+
 // Import Express.js
 const express = require('express');
 
 // Create an Express app
 const app = express();
+
+// Middleware to parse JSON bodies
 app.use(express.json());
 
-// Render assigns the port automatically
-const PORT = process.env.PORT;
+// Set port and verify_token
+const port = process.env.PORT || 3000;
+const verifyToken = process.env.VERIFY_TOKEN;
 
-// Verify token from environment
-const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+// Route for GET requests
+app.get('/', (req, res) => {
+  const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
 
-
-// =============================
-// GET - Webhook Verification
-// =============================
-app.get('/webhook', (req, res) => {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-
-    if (mode && token) {
-        if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-            console.log('WEBHOOK VERIFIED');
-            return res.status(200).send(challenge);
-        } else {
-            return res.sendStatus(403);
-        }
-    }
-
-    res.sendStatus(400);
+  if (mode === 'subscribe' && token === verifyToken) {
+    console.log('WEBHOOK VERIFIED');
+    res.status(200).send(challenge);
+  } else {
+    res.status(403).end();
+  }
 });
 
-
-// =============================
-// POST - Incoming Messages
-// =============================
-app.post('/webhook', (req, res) => {
-    const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
-    console.log(`\n=== Incoming WhatsApp Message @ ${timestamp} ===\n`);
-    console.log(JSON.stringify(req.body, null, 2));
-    console.log(`\n==============================================\n`);
-
-    // Always respond 200 OK or WhatsApp will retry
-    res.sendStatus(200);
+// Route for POST requests
+app.post('/', (req, res) => {
+  const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  console.log(`\n\nWebhook received ${timestamp}\n`);
+  console.log(JSON.stringify(req.body, null, 2));
+  res.status(200).end();
 });
 
-
-// =============================
-// Start Server
-// =============================
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+// Start the server
+app.listen(port, () => {
+  console.log(`\nListening on port ${port}\n`);
 });
-
-
-
-
-
-
-
-
