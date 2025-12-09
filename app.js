@@ -139,7 +139,7 @@ app.post('/webhook', async (req, res) => {
   if (message.type === "text") {
     try {
       await axios.post(
-        `https://graph.facebook.com/v22.0/${business_phone_number_id}/messages`,
+        `https://graph.facebook.com/v22.0/839312095934555/messages`,
         {
           messaging_product: "whatsapp",
           to: message.from,
