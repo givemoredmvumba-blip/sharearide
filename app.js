@@ -95,7 +95,7 @@ const axios = require('axios');
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const GRAPH_API_TOKEN = process.env.GRAPH_API_TOKEN;
 
