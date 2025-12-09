@@ -97,6 +97,7 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
+const GRAPH_API_TOKEN = process.env;
 
 // Verification endpoint
 app.get('/webhook', (req, res) => {
@@ -118,6 +119,35 @@ app.get('/webhook', (req, res) => {
 // Webhook event handler
 app.post('/webhook', (req, res) => {
   console.log('Webhook event received:', JSON.stringify(req.body, null, 2));
+
+   if (message?.type === "text") {
+    
+        // extract the business number to send the reply from it
+        const business_phone_number_id =
+        req.body.entry?.[0].changes?.[0].value?.metadata?.phone_number_id;
+        const username = req.body.entry?.[0]?.changes[0]?.value?.contacts?.[0];
+
+        await axios({
+            method: "POST",
+            url: `https://graph.facebook.com/v22.0/${business_phone_number_id}/messages`,
+            headers: {
+                Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+            },
+            data: {
+                messaging_product: "whatsapp",
+                to: message.from,
+                text: {
+                    body: "Hi! "+ username.profile.name + "\n\nWelcome to Flight Connect\n"
+                        +"1. Book Bus To Johannesburg\n"+
+                        "2. Book Bus To Gaborone\n"+
+                        "3. Book Return Ticket"
+                    },
+                    context: {
+                        message_id: message.id, // shows the message as a reply to the original user message
+                    },
+                },
+        });
+    }
   res.sendStatus(200);
 });
 
