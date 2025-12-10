@@ -216,6 +216,36 @@ app.post('/', (req, res) => {
   const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
   console.log(`\n\nWebhook received ${timestamp}\n`);
   console.log(JSON.stringify(req.body, null, 2));
+    if (message.type === "text") {
+    try {
+      await axios.post(
+        `https://graph.facebook.com/v22.0/839312095934555/messages`,
+        {
+          messaging_product: "whatsapp",
+          to: message.from,
+          text: {
+            body:
+              "Hi! " + username + "\n\nWelcome to Flight Connect\n" +
+              "1. Book Bus To Johannesburg\n" +
+              "2. Book Bus To Gaborone\n" +
+              "3. Book Return Ticket"
+          },
+          context: {
+            message_id: message.id
+          }
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${GRAPH_API_TOKEN}`
+          }
+        }
+      );
+
+    } catch (err) {
+      console.error("ERROR sending message →", err.response?.data || err.message);
+    }
+  }
+
   res.status(200).end();
 });
 
