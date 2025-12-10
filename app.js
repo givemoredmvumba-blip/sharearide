@@ -311,7 +311,6 @@ app.post("/", async (req, res) => {
           to: from,
           text: {
             body:
-              "Hi! " + username + "\n\nWelcome to Flight Connect\n" +
               "1. Book Bus To Johannesburg\n" +
               "2. Book Bus To Gaborone\n" +
               "3. Book Return Ticket"
