@@ -305,7 +305,7 @@ app.post("/", async (req, res) => {
     // Only respond to text messages
     if (type === "text") {
       await axios.post(
-        `https://graph.facebook.com/v22.0/839312095934555/messages`,
+        `https://graph.facebook.com/v22.0/864944980033077/messages`,
         {
           messaging_product: "whatsapp",
           to: from,
