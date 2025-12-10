@@ -23,7 +23,7 @@
 //     result += chars.charAt(Math.floor(Math.random() * chars.length));
 //   }
 //   return result;
-// }
+// } 
 
 
 // app.post("/webhook", async (req, res) => {
