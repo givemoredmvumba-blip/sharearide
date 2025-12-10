@@ -184,45 +184,131 @@
 
 
 
+// // Import Express.js
+// const express = require('express');
+
+// // Create an Express app
+// const app = express();
+
+// // Middleware to parse JSON bodies
+// app.use(express.json());
+
+// // Set port and verify_token
+// const port = process.env.PORT || 3000;
+// const verifyToken = process.env.VERIFY_TOKEN;
+
+// // Route for GET requests
+// app.get('/', (req, res) => {
+//   const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
+//     console.log(JSON.stringify(req.body, null, 2));
+
+
+//   if (mode === 'subscribe' && token === verifyToken) {
+//     console.log('WEBHOOK VERIFIED');
+//     res.status(200).send(challenge);
+//   } else {
+//     res.status(403).end();
+//   }
+// });
+
+// // Route for POST requests
+// app.post('/', (req, res) => {
+//   const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+//   console.log(`\n\nWebhook received ${timestamp}\n`);
+//   console.log(JSON.stringify(req.body, null, 2));
+//     if (message.type === "text") {
+//     try {
+//       await axios.post(
+//         `https://graph.facebook.com/v22.0/839312095934555/messages`,
+//         {
+//           messaging_product: "whatsapp",
+//           to: message.from,
+//           text: {
+//             body:
+//               "Hi! " + username + "\n\nWelcome to Flight Connect\n" +
+//               "1. Book Bus To Johannesburg\n" +
+//               "2. Book Bus To Gaborone\n" +
+//               "3. Book Return Ticket"
+//           },
+//           context: {
+//             message_id: message.id
+//           }
+//         },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${GRAPH_API_TOKEN}`
+//           }
+//         }
+//       );
+
+//     } catch (err) {
+//       console.error("ERROR sending message →", err.response?.data || err.message);
+//     }
+//   }
+
+//   res.status(200).end();
+// });
+
+// // Start the server
+// app.listen(port, () => {
+//   console.log(`\nListening on port ${port}\n`);
+// });
+
+
 // Import Express.js
-const express = require('express');
+const express = require("express");
+const axios = require("axios");
 
-// Create an Express app
 const app = express();
-
-// Middleware to parse JSON bodies
 app.use(express.json());
 
 // Set port and verify_token
 const port = process.env.PORT || 3000;
 const verifyToken = process.env.VERIFY_TOKEN;
+const GRAPH_API_TOKEN = process.env.GRAPH_API_TOKEN;
 
-// Route for GET requests
-app.get('/', (req, res) => {
-  const { 'hub.mode': mode, 'hub.challenge': challenge, 'hub.verify_token': token } = req.query;
-    console.log(JSON.stringify(req.body, null, 2));
+// Route for GET requests (Webhook verification)
+app.get("/", (req, res) => {
+  const mode = req.query["hub.mode"];
+  const challenge = req.query["hub.challenge"];
+  const token = req.query["hub.verify_token"];
 
-
-  if (mode === 'subscribe' && token === verifyToken) {
-    console.log('WEBHOOK VERIFIED');
-    res.status(200).send(challenge);
+  if (mode === "subscribe" && token === verifyToken) {
+    console.log("WEBHOOK VERIFIED");
+    return res.status(200).send(challenge);
   } else {
-    res.status(403).end();
+    return res.status(403).end();
   }
 });
 
-// Route for POST requests
-app.post('/', (req, res) => {
-  const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+// Route for POST requests (Webhook messages)
+app.post("/", async (req, res) => {
+  const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
   console.log(`\n\nWebhook received ${timestamp}\n`);
   console.log(JSON.stringify(req.body, null, 2));
-    if (message.type === "text") {
-    try {
+
+  // WhatsApp webhook message extraction
+  try {
+    const entry = req.body.entry?.[0];
+    const changes = entry?.changes?.[0];
+    const messages = changes?.value?.messages;
+
+    if (!messages || messages.length === 0) {
+      return res.sendStatus(200);
+    }
+
+    const message = messages[0];            // Actual message received
+    const from = message.from;              // User phone number
+    const username = message.profile?.name; // Username
+    const type = message.type;              // Message type
+
+    // Only respond to text messages
+    if (type === "text") {
       await axios.post(
         `https://graph.facebook.com/v22.0/839312095934555/messages`,
         {
           messaging_product: "whatsapp",
-          to: message.from,
+          to: from,
           text: {
             body:
               "Hi! " + username + "\n\nWelcome to Flight Connect\n" +
@@ -236,20 +322,25 @@ app.post('/', (req, res) => {
         },
         {
           headers: {
-            Authorization: `Bearer ${GRAPH_API_TOKEN}`
+            Authorization: `Bearer ${GRAPH_API_TOKEN}`,
+            "Content-Type": "application/json"
           }
         }
       );
 
-    } catch (err) {
-      console.error("ERROR sending message →", err.response?.data || err.message);
+      console.log("Reply sent!");
     }
-  }
 
-  res.status(200).end();
+    res.sendStatus(200);
+
+  } catch (err) {
+    console.error("ERROR processing webhook →", err);
+    res.sendStatus(500);
+  }
 });
 
-// Start the server
+// Start server
 app.listen(port, () => {
   console.log(`\nListening on port ${port}\n`);
 });
+
